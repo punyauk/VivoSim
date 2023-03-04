@@ -1,0 +1,38 @@
+
+
+BOX DESCRIPTION
+    First character is either 0 or 1  where 1 means registered with server and 0 means not registered
+    0, 10.0, 0.0, 1636, 1, 2.0, 4.0, 1, User.Name, ab123456-cdef-4850-9fec-66c5a4005fd7, 1676896049, 1, 0
+
+DATABASE
+    boxID           Box Key
+    location        Box location on region <x,y,z>
+    grid            Grid name
+    region          Region name
+    name            Plot name
+    slurl           SLUrl
+    created         Date of first addition to database
+    cost            Rental charge per week (Vivo's)
+    online          True or false
+    state           1=Leased, 0=unleased, -1=disabled
+    flags           1=Renewal due, 2=Renewal overdue, 3=Renewal expired
+    renterID        Joomla ID of rental owner
+    ownerID         Joomla ID of current renter
+    lastheard_date  Last checkin, used to establish if box is no longer in existance/working
+
+    CREATE TABLE `#__vivos_rentals` (
+        `boxID` CHAR(36) NOT NULL DEFAULT '0',
+        `location` CHAR(128) NOT NULL DEFAULT '0',
+        `grid` CHAR(128) NOT NULL DEFAULT '0',
+        `region` CHAR(128) NOT NULL DEFAULT '0',
+        `name` CHAR(128) NOT NULL DEFAULT '0',
+        `slurl` CHAR(128) NOT NULL DEFAULT '0',
+        `created` DATE,
+        `cost` TINYINT NOT NULL DEFAULT '0',
+        `online` BOOLEAN NOT NULL DEFAULT '0',
+        `state` TINYINT NOT NULL DEFAULT '-1',
+        `flags` TINYINT NOT NULL DEFAULT '0',
+        `renterID` INT(11) NOT NULL DEFAULT '0',
+        `ownerID` CHAR(36) NOT NULL DEFAULT '',
+        `lastheard_date` DATE,
+        PRIMARY KEY (`boxID`)

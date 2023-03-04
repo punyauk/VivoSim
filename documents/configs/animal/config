@@ -1,0 +1,164 @@
+######################################################################################
+# CONFIGURATION VALUES FOR AN_CONFIG NOTECARD                                        #
+#   Note all items are optional.  The default values here are used for any not       #
+#   included in the actual an_config notecard so you only really need to include     #
+#   any you wish to change.                                                          #
+#     The configuration given here is valid for animal script version 5.5 and above  #
+######################################################################################
+
+# Default language to use on menus
+LANG=en-GB
+#
+# The name given to new animals such as Cow, Sheep etc
+NAME=Animal
+#
+# Word used by animal when 'speaking'
+CRY=Ah
+#
+# Where the animal gets its food from
+FEEDER=SF Animal Feeder
+#
+# How far (in m) the animal will wander from its home position
+RADIUS=10
+#
+# What surface the animal follows. Can be flat, ground or water
+SURFACE=flat
+#
+# If set to 0 during the day the animal will just play sounds but won't speak (I'm thirsty etc) and during the night it won't make any sounds at all.
+CHATTY=1
+#
+# If set to 1, animal won't move, although the menu allows you to start it moving again
+IMMOBILE=0
+#
+# How often (in seconds) animals need to feed (5900 is approx 1.64 hours)
+FEEDTIME=5900
+#
+# What percent should the animal take each feed
+FEEDAMOUNT=1.0
+#
+# How often (in seconds) animals need to drink (5000 is approx 1.4 hours)
+WATERTIME=5000.0
+#
+# What percent should the animal take each drink
+WATERAMOUNT=1.0
+#
+# 1 if reproduces by egg, otherwise 0 means animal gets pregnant
+LAYS_EGG=0
+#
+# For animals that get pregnant, how long (in seconds) pregnancy lasts (432000s is 5 days)
+PREGNANT_TIME=432000
+#
+# For eggs, how long until hatching (seconds)
+EGG_TIME=86400
+#
+# For animals that lay eggs, how often (in seconds) after laying an egg before the animal can be mated again (86400 is 24 hours)
+MATE_INTERVAL=86400
+#
+# Does adult female give a product linked with giving birth/laying an egg.  Set to 1 if true, otherwise set to 0
+HASMILK=0
+#
+# If above is set to 1, time in seconds between giving each 'milk' product. First product is given straight after giving birth/laying an egg   (86400=24 hours)
+MILKTIME=86400
+#
+# Name of item to give as 'milk' object (must be in the animals inventory)
+MILK_OBJECT=SF Milk
+#
+# Set to 1 if adult animals give wool product (wool, feathers etc)
+HASWOOL=0
+#
+# If above is set to 1, time in seconds between giving each 'wool' product. (345600 is 4 days)
+WOOLTIME=345600
+#
+# Product to give as 'wool' item  (must be in the animals inventory)
+WOOL_OBJECT=SF Wool
+#
+# Set to 1 if adult animals give manure product, 0 otherwise
+HASMANURE=0
+#
+# If above is set to 1, time in seconds between giving each 'manure' product. (172800 is 48 hours)
+# NOTE: before version 5.1 it is fixed at every 48 hours
+MANURETIME=172800
+#
+# Product to give as 'manure' item  (must be in the animals inventory)
+# NOTE: before version 5.1 it is fixed at SF Manure
+MANURE_OBJECT=SF Manure
+#
+# If 1, animal will rez poo when ready, if 0 then farmer needs to collect it (version 5.1 onwards)
+AN_AUTO_POO=0
+#
+# Set to 1 to have animal sleep at night (i.e. stay in down position and no sounds or chat) Can also be changed via options menu
+SLEEP_MODE=0
+#
+# Average life expectancy in days
+LIFEDAYS=30
+#
+# Product to give as 'skin' item when animal dies (must be in the animals inventory)
+# If nothing to be given use  SKIN_OBJECT=
+SKIN_OBJECT=SF Skin
+#
+# Product to give as 'meat' item when animal dies (must be in the animals inventory)
+# If nothing to be given use  MEAT_OBJECT=
+MEAT_OBJECT=SF Meat
+#
+# Set to 1 to use genetics (animals have multiple body textures named goat, goat12, goat2 etc) or 0 otherwise
+HASGENES=0
+#
+# If set to 1, allows you to specify different textures for each prim in the SKINABLE_PRIMS section (see https://quintonia.net/forum/development/35-genetics-part-2)
+MULTI_SKIN=0
+#
+# which prims use the 'goat' textures if above is 1 e.g. SKINABLE_PRIMS=2,3
+SKINABLE_PRIMS=1
+#
+# Which prims to show only for child animal e.g. CHILD_PRIMS=4
+CHILD_PRIMS=
+#
+# Which prims to show only for adult male e.g ADULT_MALE_PRIMS=1,7,8
+ADULT_MALE_PRIMS=
+#
+# Which prims to show only for adult female
+ADULT_FEMALE_PRIMS=
+#
+# Which prims to randomly show for adults
+ADULT_RANDOM_PRIMS=
+#
+#  How much of life to spend as child   LIFEDAYS x CHILDHOOD_RATIO
+CHILDHOOD_RATIO=0.15
+#
+# Initial scale as child
+CHILD_SCALE=0.5
+#
+# Don't let the child grow beyond this scale
+CHILD_MAX_SCALE=1.0
+#
+# To make male animals bigger on average than females use numbers >1.0, or use numbers <1.0 for larger females
+MALE_SCALE=1.05;
+#
+# To make female animals bigger on average than males use numbers >1.0, or use numbers <1.0 for larger males
+FEMALE_SCALE=1.00;
+#
+# How much to move animal in x direction for each step
+STEP_SIZE=0.4
+#
+# Total number of adult sounds (adult1, adult2 etc)
+TOTAL_ADULTSOUNDS=4
+#
+# Total number of baby sounds (baby1, baby2 etc)
+TOTAL_BABYSOUNDS=2
+#
+# Set to 1 to only allow owner to select 'Butcher', 'Mate' and 'Follow' options or 0 for anyone in same group to have full access
+RESTRICT_ACCESS=0
+#
+# Prefix for products in this farm
+PREFIX=SF
+#
+# Set to 1 for 'human animals' such as baby
+HUMAN=0
+'
+# Set to 0 to have another script handle touch
+TOUCH_ACTIVE=1
+
+######## NOT YET IMPLEMENTED ########
+
+SERVER_SAVE=0
+FLOAT_PRIM=1
+

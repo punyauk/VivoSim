@@ -1,6 +1,6 @@
 // ossl_check.lsl
 //  Checks the avialability of the OSSL functions needed for SatyrFarm
-//   Version 3.21    11 May 2023 
+//   Version 6.00    11 May 2023 
 
 string TXT_ALL_GOOD = "All Okay";
 string TXT_NOT_GOOD = "ISSUES\nFOUND";
@@ -268,23 +268,17 @@ state Running
             }
         }
 
-        string timeStamp = llGetTimestamp();
-        timeStamp = osReplaceString(timeStamp, "T", " ", 1, 0);
-        timeStamp = llGetSubString(timeStamp, 0, 18);
-
-        string lastRestart = "\n \n***  Last Region Restart: " + timeStamp +"  ***\n \n";
-
         if (canDo == llGetListLength(FunctionNames))
         {
-            llOwnerSay("\n----------------------\n" +TXT_ALL_GOOD +lastRestart +"\n----------------------\n");
-            llSetText(TXT_ALL_GOOD+"\n" +lastRestart +simStuff, <0.8, 0.8, 1.0>, 1);
+            llOwnerSay("\n----------------------\n" +TXT_ALL_GOOD +"\n----------------------\n");
+            llSetText(TXT_ALL_GOOD+"\n" +simStuff, <0.8, 0.8, 1.0>, 1);
             setText(TXT_ALL_GOOD);
             llSetColor(<0,1,0>, ALL_SIDES);
         }
         else
         {
-            llOwnerSay(lastRestart + "\n----------------------\n" +TXT_ISSUES +lastRestart +"----------------------\n \n" +statusMsg +"\n---------------------------------------------\n");
-            llSetText(TXT_ISSUES+":\n" +lastRestart +"\n\t" +floatTxt +"\n" + simStuff, <0.8, 0.8, 1.0>, 1.0);
+            llOwnerSay( "\n----------------------\n" +TXT_ISSUES +"----------------------\n \n" +statusMsg +"\n---------------------------------------------\n");
+            llSetText(TXT_ISSUES+":\n" +"\n\t" +floatTxt +"\n" + simStuff, <0.8, 0.8, 1.0>, 1.0);
             setText(TXT_NOT_GOOD);
             llSetColor(<1,0,0>, ALL_SIDES);
         }

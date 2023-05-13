@@ -1,15 +1,24 @@
 /* Change log
+ *  Added config option to display progress as percent, time remaining or both
  *  Added ability for recipe to generate more than one product
  *  Fixed issue of an abort not unsitting avatar
  *  Added storing of progress so for recipes that take a long time they should recover after region restart
  */
+// NEW TEXT
+string TXT_TIME_LEFT = "Time left";
+string TXT_DAYS = "days";
+string TXT_DAY = "day";
+string TXT_HOURS = "hours";
+string TXT_HOUR = "hour";
+string TXT_MINUTES = "minutes";
+string TXT_MINUTE = "minute";
 
 // machine.lsl
 //
 // Common script used by all processing machines, e.g. juice maker, oven, windmill etc
 // Takes a list of ingredients and makes a product item.
 
-float VERSION = 6.02;   // BETA 14 May 2023
+float VERSION = 6.02;		// 12 May 2023
 
 integer DEBUGMODE = FALSE;
 
@@ -20,13 +29,14 @@ debug(string text)
 
 // Default Values - can be set in the config notecard
 
-integer mustSit = 0;                     // MUST_SIT=0              If the Avatar is required to sit on the object to produce items
-integer makeVerb = TRUE;                 // MAKE_VERB=1             Use 1 for 'make' or 0 for 'do'
-integer default_sensorRadius = 5;        // SENSOR_DISTANCE=10      How far to search (radius) when searching for ingredients to add
-integer default_timeToCook = 60;         // DEFAULT_DURATION        Default cooking time if not specified in recipe
-vector  default_rezzPosition = <1,0,0>;  // REZ_POSITION=<1,1,1>    Default rez position. Can be overridden in the recipes notecard with the RezPos:<x,y,z> optional parameter
-string  languageCode = "en-GB";          // LANG=en-GB              Default language
-string  PREFIX = "";                     // RCODE=WINDMILL          For using networked recipe cards
+integer mustSit = 0;					// MUST_SIT=0				; If the Avatar is required to sit on the object to produce items
+integer makeVerb = TRUE;				// MAKE_VERB=1				; Use 1 for 'make' or 0 for 'do'  or can use either M or D
+integer default_sensorRadius = 5;		// SENSOR_DISTANCE=10		; How far to search (radius) when searching for ingredients to add
+integer default_timeToCook = 60;		// DEFAULT_DURATION			; Default cooking time if not specified in recipe
+vector  default_rezzPosition = <1,0,0>;	// REZ_POSITION=<1,1,1>		; Default rez position. Can be overridden in the recipes notecard with the RezPos:<x,y,z> optional parameter
+string  progressDisplay = "PT";			// PROGRESS_IND=PT			; Progress, P to show as percent complete, T to show as time remaining, PT/TP for both
+string  languageCode = "en-GB";			// LANG=en-GB				; Default language
+string  PREFIX = "";					// RCODE=WINDMILL			; For using networked recipe cards
 string  MY_PREFIX = "MY";
 
 // Multilingual support
@@ -171,6 +181,7 @@ loadConfig()
 		list lines = llParseString2List(osGetNotecard("config"), ["\n"], []);
 		string line;
 		list tok;
+		string firstChar;
 		string cmd;
 		string val;
 		integer i;
@@ -179,7 +190,10 @@ loadConfig()
 		{
 			line = llStringTrim(llList2String(lines, i), STRING_TRIM);
 
-			if (llGetSubString(line, 0, 0) != "#")
+			firstChar = llGetSubString(line, 0, 0);
+
+			// Comment lines can start with either ;  or  #
+			if ((firstChar != "#") && (firstChar != ";"))
 			{
 				tok = llParseStringKeepNulls(line, ["="], []);
 				cmd = llList2String(tok, 0);
@@ -192,6 +206,16 @@ loadConfig()
 				else if (cmd == "MAKE_VERB") makeVerb = (integer)val;
 				else if (cmd == "LANG") languageCode = val;
 				else if (cmd == "RCODE") PREFIX = val;
+
+				else if (cmd == "PROGRESS_IND")
+				{
+					progressDisplay = llToUpper(val);
+
+					if (llListFindList(["P", "T", "PT"], [progressDisplay]) == -1 )
+					{
+						progressDisplay = "PT";
+					}
+				}
 			}
 		}
 	}
@@ -266,12 +290,19 @@ loadLanguage(string langCode)
 					else if (cmd == "TXT_ADD_INGREDIENTS") TXT_ADD_INGREDIENTS = val;
 					else if (cmd == "TXT_SELECTED") TXT_SELECTED = val;
 					else if (cmd == "TXT_PROGRESS") TXT_PROGRESS = val;
+					else if (cmd == "TXT_TIME_LEFT") TXT_TIME_LEFT = val;
 					else if (cmd == "TXT_SELECTED_RECIPE") TXT_SELECTED_RECIPE = val;
 					else if (cmd == "TXT_PREP") TXT_PREP = val;
 					else if (cmd == "TXT_SIT") TXT_SIT = val;
 					else if (cmd == "TXT_FINISHED") TXT_FINISHED = val;
 					else if (cmd == "TXT_NO_PRODUCT") TXT_NO_PRODUCT = val;
 					else if (cmd == "TXT_CHECKING") TXT_CHECKING = val;
+					else if (cmd == "TXT_DAYS") TXT_DAYS = val;
+					else if (cmd == "TXT_DAY") TXT_DAY = val;
+					else if (cmd == "TXT_HOURS") TXT_HOURS = val;
+					else if (cmd == "TXT_HOUR") TXT_HOUR = val;
+					else if (cmd == "TXT_MINUTES") TXT_MINUTES = val;
+					else if (cmd == "TXT_MINUTE") TXT_MINUTE = val;
 					else if (cmd == "TXT_ERROR_READ") TXT_ERROR_READ = val;
 					else if (cmd == "TXT_ERROR_NOT_FOUND") TXT_ERROR_NOT_FOUND = val;
 					else if (cmd == "TXT_ERROR_UPDATE") TXT_ERROR_UPDATE = val;
@@ -306,6 +337,20 @@ multiPageMenu(key id, string message, list buttons)
 	llDialog(id, message, [TXT_CLOSE]+its+[">>"], ch);
 }
 
+doSounds(integer level)
+{
+	if (level == 1)
+	{
+		if (llGetInventoryType("cooking") == INVENTORY_SOUND)
+		{
+			llLoopSound("cooking", 1.0);
+		}
+	}
+	else
+	{
+		llStopSound();
+	}
+}
 
 setAnimations(integer level)
 {
@@ -327,9 +372,12 @@ setAnimations(integer level)
 			float f = (float)llGetSubString( llGetLinkName(i), 18, -1);
 			if (f ==0.) f= 1.0;
 
-			llSetLinkPrimitiveParamsFast(i, [PRIM_COLOR, ALL_SIDES, color, (level>0)*f]);
+			// llSetLinkPrimitiveParamsFast(i, [PRIM_COLOR, ALL_SIDES, color, (level>0)*f]);
+			llSetLinkAlpha(i, (level>0)*f, ALL_SIDES);
 		}
 	}
+
+	doSounds(level);
 }
 
 psys(key k)
@@ -370,6 +418,81 @@ psys(key k)
 						PSYS_PART_INTERP_SCALE_MASK
 				]);
 }
+
+string getTime(integer secs)
+{
+	string timeStr = "";
+	integer days;
+	integer hours;
+	integer minutes;
+
+	if (secs < 60)
+	{
+		timeStr += " < 1 " +TXT_MINUTE;
+	}
+	else
+	{
+ 
+		if (secs >= 86400)
+		{
+			days = llFloor(secs/86400);
+			secs = secs%86400;
+
+			if (days > 1) 
+			{
+				timeStr += (string)days+" " +TXT_DAYS;
+			}
+			else
+			{
+				timeStr += (string)days+" " +TXT_DAY;
+			}
+
+			if (secs > 0) 
+			{
+				timeStr += ", ";
+			}
+		}
+
+		if (secs >= 3600)
+		{
+			hours = llFloor(secs/3600);
+			secs = secs%3600;
+
+			if (hours != 1)
+			{
+				timeStr+=(string)hours+" " +TXT_HOURS;
+			}
+			else
+			{
+				timeStr+=(string)hours+" " +TXT_HOUR;
+			}
+
+			if (secs > 0)
+			{
+				timeStr+=", ";
+			}
+		}
+
+		if (secs >= 60)
+		{
+			// minutes = llFloor(secs/60);
+			minutes = llCeil(secs/60);
+			secs = secs%60;
+
+			if (minutes != 1)
+			{
+				timeStr+=(string)minutes+" " +TXT_MINUTES;
+			}
+			else
+			{
+				timeStr+=(string)minutes+" " +TXT_MINUTE;
+			}
+		}
+	}
+
+	return timeStr;
+}
+
 
 refresh()
 {
@@ -440,15 +563,28 @@ refresh()
 				return;
 			}
 		}
-
-		if (llGetInventoryType("cooking") == INVENTORY_SOUND)
+		else
 		{
-			llLoopSound("cooking", 1.0);
+			doSounds(1);
 		}
 
 		setAnimations(1);
 		progress = (integer)((float)(llGetTime())*100.0/timeToCook);
-		str = TXT_SELECTED +": "+recipeName+"\n" +TXT_PROGRESS + ": "+ (string)((integer)progress)+ " %";
+		string howLong = getTime(llRound(timeToCook - llGetTime()));
+		str = TXT_SELECTED +": "+recipeName+"\n \n" +TXT_PROGRESS + ": ";
+		
+		if (progressDisplay == "P")
+		{
+			str += (string)((integer)progress)+ " %\n";
+		}
+		else if (progressDisplay == "T")
+		{
+			str += TXT_TIME_LEFT +": " +howLong +"\n";
+		}
+		else
+		{
+			str += (string)((integer)progress)+ " %\n \n" +TXT_TIME_LEFT +": " +howLong +"\n";
+		}
 
 		if (progress >= 100.0)
 		{
@@ -1080,6 +1216,7 @@ default
 	{
 		llMessageLinked(LINK_SET,0, "PROGRESS", "");
 		llSetClickAction(CLICK_ACTION_TOUCH);
+		llStopSound();
 		energy =-1;
 
 		//for updates
@@ -1096,6 +1233,7 @@ default
 		loadConfig();
 		loadFromDesc();
 		status = "";
+		llMessageLinked(LINK_SET,99, "ENDCOOKING", "");
 
 		if (languageCode == "")
 		{
@@ -1105,6 +1243,7 @@ default
 		loadLanguage(languageCode);
 		getRecipeNames();
 		refresh();
+
 		llMessageLinked( LINK_SET, 99, "RESET", NULL_KEY);
 	}
 
@@ -1119,10 +1258,12 @@ default
 			else
 			{
 				loadConfig();
+				loadLanguage(languageCode);
 				getRecipeNames();
 				customOptions = [];
 				customText = [];
-				llMessageLinked( LINK_SET, 99, "RESET", NULL_KEY);
+				//llMessageLinked( LINK_SET, 99, "RESET", NULL_KEY);
+				refresh();
 			}
 		}
 
@@ -1142,6 +1283,7 @@ default
 			{
 				llMessageLinked(LINK_SET,94, "UNSIT", "");
 				setAnimations(0);
+
 			}
 
 			refresh();
@@ -1151,6 +1293,9 @@ default
 	on_rez(integer n)
 	{
 		llSetObjectDesc("");
+		llSleep(0.5);
+		llMessageLinked(LINK_SET,99, "ENDCOOKING", "");
+		llSleep(0.5);
 		llResetScript();
 	}
 

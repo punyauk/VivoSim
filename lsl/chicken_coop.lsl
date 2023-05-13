@@ -2,7 +2,7 @@
 //  Added ability to just produce eggs with no killing chickens!
 //  Added tasker support
 
-float VERSION = 6.00;  // 10 May 2023
+float VERSION = 6.01;  // 13 May 2023
 
 integer DEBUGMODE = FALSE;
 
@@ -13,7 +13,7 @@ debug(string text)
 
 // config notecard can override these
 vector rezzPosition = <0.0, 1.5, 2.0>;	// REZ_POSITION=<0.0, 1.5, 2.0>   (where to rez product)
-list   FOODITEMS = [];					// Product to accept as food. There can be multiple FOOD= lines if the feeder can accept multiple foods
+list   FOODITEMS = [];					// FOOD=Corn						; Product to accept as food. There can be multiple FOOD= lines if the feeder can accept multiple foods
 string FOODITEM =   "Corn";				// FOODITEM=Corn					; Short name of food product to use
 string FOODTOWER =  "SF Storage Rack";	// FOODTOWER=SF Storage Rack		; Full name of storage rack
 string WATERITEM =  "Water";			// WATERITEM=Water					; Short name of water item
@@ -235,6 +235,8 @@ loadLanguage(string langCode)
 			}
 		}
 	}
+
+	llMessageLinked(LINK_SET, 0, "LANG_MENU|" +languageCode , NULL_KEY);
 }
 
 saveStateToDesc()
@@ -797,6 +799,18 @@ default
 			refresh();
 		}
 
+	}
+
+	changed(integer change)
+	{
+		if (change & CHANGED_INVENTORY)
+		{
+			
+			loadConfig();
+			loadLanguage(languageCode);
+			refresh();
+			
+		}
 	}
 
 }

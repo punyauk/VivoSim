@@ -13,7 +13,6 @@ debug(string text)
 
 // config notecard can override these
 vector rezzPosition = <0.0, 1.5, 2.0>;	// REZ_POSITION=<0.0, 1.5, 2.0>   (where to rez product)
-list   FOODITEMS = [];					// FOOD=Corn						; Product to accept as food. There can be multiple FOOD= lines if the feeder can accept multiple foods
 string FOODITEM =   "Corn";				// FOODITEM=Corn					; Short name of food product to use
 string FOODTOWER =  "SF Storage Rack";	// FOODTOWER=SF Storage Rack		; Full name of storage rack
 string WATERITEM =  "Water";			// WATERITEM=Water					; Short name of water item
@@ -652,7 +651,7 @@ default
 			sense = "";
 			llSetTimerEvent(1);
 		}
-		else if (cmd == "HAVE"  && llList2Key(tk,2)==FOODITEM)
+		else if (cmd == "HAVE"  && llList2Key(tk,2)== FOODITEM)
 		{
 			llWhisper(0, TXT_DONE_AUTOFOOD);
 			food =100.0;
@@ -665,9 +664,9 @@ default
 			 water=100.;
 			refresh();
 		}
-		else if (cmd == "CORN" )
+		else if (cmd == llToUpper(FOODITEM))
 		{
-			food=100.;
+			food=100.0;
 			refresh();
 		}
 		//for updates
@@ -759,7 +758,7 @@ default
 	{
 		key id = llDetectedKey(0);
 
-		if (sense== "WaitAutoWater")
+		if (sense == "WaitAutoWater")
 		{
 			messageObj(id,  "GIVEWATER|"+PASSWORD+"|"+(string)llGetKey());
 		}
@@ -776,9 +775,17 @@ default
 
 	no_sensor()
 	{
-		if (sense == "WaitAutoWater" || sense == "WaitAutoFood")
+		if (sense == "WaitAutoWater")
 		{
 			llRegionSayTo(toucher, 0, TXT_NO_TOWER);
+			autoWater = FALSE;
+			llRegionSayTo(toucher, 0, TXT_AUTOWATER +": " +TXT_OFF);
+		}
+		else if (sense == "WaitAutoFood")
+		{
+			llRegionSayTo(toucher, 0, TXT_NO_TOWER);
+			autoFood = FALSE;
+			llRegionSayTo(toucher, 0, TXT_AUTOFOOD +": " +TXT_OFF);
 		}
 		else
 		{
@@ -805,11 +812,14 @@ default
 	{
 		if (change & CHANGED_INVENTORY)
 		{
-			
 			loadConfig();
 			loadLanguage(languageCode);
-			refresh();
-			
+			llSetText(TXT_ACTIVATE, <0.25, 1.0, 0.1>, 1);
+
+			if (activated == TRUE)
+			{
+				refresh();
+			}
 		}
 	}
 

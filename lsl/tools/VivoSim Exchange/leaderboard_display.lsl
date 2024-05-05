@@ -3,7 +3,7 @@
 //  leaderboard_display.lsl
 // ----------------------------------------
 
-float VERSION = 6.01;	// 27 March 2023
+float VERSION = 6.10;	// 25 April 2024
 
 integer DEBUGMODE = FALSE;
 debug(string text)
@@ -11,27 +11,31 @@ debug(string text)
 	if (DEBUGMODE == TRUE) llOwnerSay("DEBUG:" + llToUpper(llGetScriptName()) + " " + text);
 }
 
-// Server URL
-string BASEURL = "";
-string fontName = "Arial"; // Arial is the default font used, if unspecified
+// Settings from config notecard (passed via main script)
+string  BASEURL = "";
+string  fontName = "Arial"; // Arial is the default font used, if unspecified
+integer useCollectiveID = FALSE;
+string  collectiveID = "";
 
-string txt_name = "Name";
-string txt_score = "Score";
-string txt_topten = "Leaderboard";
-string langName = "en-GB";
+string  txt_name = "Name";
+string  txt_score = "Score";
+string  txt_topten = "Leaderboard";
+string  collectiveName = "";
 
-vector GREEN       = <0.180, 0.800, 0.251>;
-vector YELLOW      = <1.000, 0.863, 0.000>;
-vector WHITE       = <1.0, 1.0, 1.0>;
+string  langName = "en-GB";
+
+vector  GREEN       = <0.180, 0.800, 0.251>;
+vector  YELLOW      = <1.000, 0.863, 0.000>;
+vector  WHITE       = <1.0, 1.0, 1.0>;
 
 integer quinActive;
-integer  useBeta = FALSE;
-key farmHTTP = NULL_KEY;
-key owner;
+integer useBeta = FALSE;
+key     farmHTTP = NULL_KEY;
+key     owner;
 integer FACE = 4;
-string PASSWORD = "*";
-list motdList;
-string MOTD;
+string  PASSWORD = "*";
+list    motdList;
+string  MOTD;
 integer useHTTPS;
 
 
@@ -40,21 +44,30 @@ showTopTen(list scores)
 	string body = "width:1024,height:1024,Alpha:0";
 	string CommandList = "";  // Storage for our drawing commands
 	string statusColour;
+	string txt_header = "";
+
+	if (useCollectiveID == TRUE)
+	{
+		txt_header = txt_topten + " [" + collectiveName  + "]";
+	}
+
 	// Set the font to use
 	CommandList = osSetFontName(CommandList, fontName);
+
 	// Draw a border
 	if (quinActive == FALSE) {statusColour = "crimson";} else if (useBeta == TRUE) {statusColour = "gold";} else {statusColour = "chartreuse";}
 	CommandList = osSetPenSize(CommandList, 50 );
 	CommandList = osSetPenColor(CommandList, statusColour);
 	CommandList = osMovePen(CommandList, 0,0);
 	CommandList = osDrawRectangle(CommandList, 1020,1020);
+
 	// Put header
 	CommandList = osSetPenColor(CommandList, "green");
 	CommandList = osSetFontSize(CommandList, 30);
-	vector Extents = osGetDrawStringSize( "vector", txt_topten, "Arial", 30);
+	vector Extents = osGetDrawStringSize( "vector", txt_header, "Arial", 30);
 	integer xpos = 512 - ((integer) Extents.x >> 1);        // Center the text horizontally
-	CommandList = osMovePen(CommandList, xpos, 30);         // Position the text
-	CommandList = osDrawText(CommandList, txt_topten);      // Place the text
+	CommandList = osMovePen(CommandList, xpos, 40);         // Position the text
+	CommandList = osDrawText(CommandList, txt_header);      // Place the text
 	//
 	CommandList = osSetPenColor(CommandList, "oldlace");
 	CommandList = osSetFontSize(CommandList, 26);
@@ -63,12 +76,15 @@ showTopTen(list scores)
 	CommandList = osMovePen(CommandList, 750,100);
 	CommandList = osDrawText(CommandList, txt_score);
 	CommandList = osSetFontSize(CommandList, 22);
+
 	// Draw horizontal seperator line
 	CommandList = osSetPenSize(CommandList, 3);
 	CommandList = osDrawLine(CommandList, 60, 150, 990, 150);
+
 	// Display table
 	integer offset = 0;
 	integer i;
+
 	for (0; i<llGetListLength(scores)-1; i+=3)
 	{
 		// Name
@@ -76,14 +92,16 @@ showTopTen(list scores)
 		CommandList = osDrawText(CommandList, llList2String(scores, i));
 		// Score
 		CommandList = osMovePen(CommandList, 760, (165 + offset));
-		CommandList = osDrawText(CommandList, (string)llList2Integer(scores, i+1));
+		CommandList = osDrawText(CommandList, (string)llList2String(scores, i+1));
 		// Icon
 		CommandList = osMovePen(CommandList, 85, (162 + offset));
 		CommandList = osDrawImage(CommandList, 58, 58, llList2String(scores, i+2));  // Display small logo
 		offset += 62;
 	}
+
 	// Put it all together and display on the prim face
 	osSetDynamicTextureDataBlendFace("", "vector", CommandList, body, FALSE, 2, 0, 255, FACE);
+
 	// Show MOTD
 	showMOTD();
 }
@@ -151,7 +169,7 @@ default
 		debug("link_message: " + msg);
 
 		list tk = llParseStringKeepNulls(msg, ["|"], []);
-		string cmd = llList2String(tk,0);
+		string cmd = llList2String(tk, 0);
 
 		if (cmd == "LANG_TOPTEN")
 		{
@@ -189,6 +207,22 @@ default
 			// Call timer event right away to do a refresh
 			llSetTimerEvent(0.1);
 		}
+		else if (cmd == "COLLECTIVE_MODE")
+		{
+			// llMessageLinked(LINK_SET, useCollectiveID, "COLLECTIVE_MODE|" +collectiveID, "")
+			useCollectiveID = num;
+			collectiveID = llList2String(tk, 1);
+
+			if (collectiveName == "")
+			{
+				collectiveName = "(" + collectiveID + ")";
+			}
+
+		}
+		else if (cmd == "COLLECTIVE_NAME")
+		{
+			collectiveName = llList2String(tk, 1);
+		}
 		else if (cmd == "SETHTTPS")
 		{
 			BASEURL = llList2String(tk,1);
@@ -204,7 +238,14 @@ default
 		if (quinActive == TRUE)
 		{
 			llSetTimerEvent(3500);
-			postMessage("task=topten&data1=" + (string)owner);
+			if ((useCollectiveID == TRUE) && (collectiveID != ""))
+			{
+				postMessage("task=topten&data1=" + (string)owner + "&data2=" + collectiveID);
+			}
+			else
+			{
+				postMessage("task=topten&data1=" + (string)owner);
+			}
 		}
 	}
 

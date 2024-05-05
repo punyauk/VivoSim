@@ -37,19 +37,25 @@ default
 
 			if ((profileCover != "") && (profileCover != lastCover))
 			{
-				
-				string CommandList = "";  // Storage for our drawing commands
-				
-				// Position image on prim face
-				CommandList = osMovePen(CommandList, 0, 0);
-				CommandList = osDrawImage(CommandList, 256, 256, profileCover);  
+				if (num == 0)
+				{
+					string CommandList = "";  // Storage for our drawing commands
+					
+					// Position image on prim face
+					CommandList = osMovePen(CommandList, 0, 0);
+					CommandList = osDrawImage(CommandList, 256, 256, profileCover);  
 
-				// Put it all together and display on the prim face
-				osSetDynamicTextureDataBlendFace("", "vector", CommandList, "width:256,height:256", FALSE, 1, 0, 255, FACE);
+					// Put it all together and display on the prim face
+					osSetDynamicTextureDataBlendFace("", "vector", CommandList, "width:256,height:256", FALSE, 1, 0, 255, FACE);
 
-				// Keep a track of this cover so we don't need to re-draw it if it doesn't change
-				lastCover = profileCover;
-			}						
+					// Keep a track of this cover so we don't need to re-draw it if it doesn't change
+					lastCover = profileCover;
+				}
+				else
+				{
+					llSetTexture(profileCover, FACE);
+				}
+			}
         }
 		else if (cmd == "CMD_INIT")
 		{

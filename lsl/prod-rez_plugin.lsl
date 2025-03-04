@@ -1,11 +1,10 @@
 // Change log
-//  Added giving product a copy of the P2 language notecards stored in this item
-//  Removed dataserver update section as this is all handled by primary script in object
+//  Added ability to specifiy rez rotation
 
 // prod-rez_plugin.lsl
 // plugin for all items that rez products (kitchen, plant, storage, well etc)
 
-float VERSION = 6.00;      // 16 April 2023
+float VERSION = 6.01;      // 4 March 2025
 
 integer DEBUGMODE = FALSE;
 debug(string text)
@@ -14,8 +13,9 @@ debug(string text)
 }
 
 // Default values, can be changed via config notecard
-vector  rezzPosition = <0.0, 1.5, 2.0>;     // REZ_POSITION=<0.0, 1.5, 2.0>
-string  provBoxName = "Provisions Box";     // BOX_NAME            Provisions box name
+vector  rezzPosition = <0.0, 1.5, 2.0>;			// REZ_POSITION=<0.0, 1.5, 2.0>
+rotation rezzRotation = <0.0, 0.0, 0.0, 0.0>;	// REZ_ROT=<0.0, 0.0, 0.0, 0.0>
+string  provBoxName = "Provisions Box";			// BOX_NAME            Provisions box name
 
 // Multilingual
 string TXT_PROVISIONS_TRANSFERRED="Provisions transferred to";
@@ -51,18 +51,24 @@ loadConfig()
 	if (llGetInventoryType("config") == INVENTORY_NOTECARD)
 	{
 		list lines = llParseString2List(osGetNotecard("config"), ["\n"], []);
+		list tok;
+		string line;
+		string cmd;
+		string val;
 
 		for (i=0; i < llGetListLength(lines); i++)
 		{
-			string line = llStringTrim(llList2String(lines, i), STRING_TRIM);
+			line = llStringTrim(llList2String(lines, i), STRING_TRIM);
 
 			if (llGetSubString(line, 0, 0) != "#")
 			{
-				list tok = llParseStringKeepNulls(line, ["="], []);
-				string cmd = llList2String(tok, 0);
-				string val = llList2String(tok, 1);
+				tok = llParseStringKeepNulls(line, ["="], []);
+				cmd = llList2String(tok, 0);
+				val = llList2String(tok, 1);
 
-				if (cmd == "REZ_POSITION") rezzPosition = (vector)val;
+					 if (cmd == "REZ_POSITION") rezzPosition = (vector)val;
+				else if (cmd == "REZ_ROT") rezzRotation = (rotation)val;
+				else if (cmd == "BOX_NAME") provBoxName = val;
 			}
 		}
 	}
@@ -76,27 +82,41 @@ loadLanguage(string langCode)
 	if (llGetInventoryType(languageNC) == INVENTORY_NOTECARD)
 	{
 		list lines = llParseStringKeepNulls(osGetNotecard(languageNC), ["\n"], []);
+		list tok;
+		string line;
+		string cmd;
+		string val;
 		integer i;
 
 		for (i=0; i < llGetListLength(lines); i++)
 		{
-			string line = llList2String(lines, i);
+			line = llList2String(lines, i);
 
 			if ((llGetSubString(line, 0, 0) != "#") && (llGetSubString(line, 0, 0) != ";"))
 			{
-				list tok = llParseString2List(line, ["="], []);
+				tok = llParseString2List(line, ["="], []);
+
 				if (llList2String(tok,1) != "")
 				{
-					string cmd=llStringTrim(llList2String(tok, 0), STRING_TRIM);
-					string val=llStringTrim(llList2String(tok, 1), STRING_TRIM);
+					cmd=llStringTrim(llList2String(tok, 0), STRING_TRIM);
+					val=llStringTrim(llList2String(tok, 1), STRING_TRIM);
 
 					// Remove start and end " marks
 					val = llGetSubString(val, 1, -2);
 
 					// Now check for language translations
-						 if (cmd == "TXT_NOT_STORED") TXT_NOT_STORED = val;
-						 else if (cmd == "TXT_PROVISIONS_TRANSFERRED") TXT_PROVISIONS_TRANSFERRED = val;
-					else if (cmd == "TXT_ERROR_UPDATE") TXT_ERROR_UPDATE = val;
+					if (cmd == "TXT_NOT_STORED")
+					{
+						TXT_NOT_STORED = val;
+					}
+					else if (cmd == "TXT_PROVISIONS_TRANSFERRED")
+					{
+						TXT_PROVISIONS_TRANSFERRED = val;
+					}
+					else if (cmd == "TXT_ERROR_UPDATE")
+					{
+						TXT_ERROR_UPDATE = val;
+					}
 				}
 			}
 		}
@@ -121,6 +141,7 @@ findProdScript()
 			prodScriptVer = (integer)itemVer;
 		}
 	}
+
 	debug("prodScriptName='" +prodScriptName +"'");
 }
 
@@ -128,7 +149,10 @@ messageObj(key objId, string msg)
 {
 	list check = llGetObjectDetails(objId, [OBJECT_NAME]);
 
-	if (llList2String(check, 0) != "") osMessageObject(objId, msg);
+	if (llList2String(check, 0) != "")
+	{
+		osMessageObject(objId, msg);
+	}
 }
 
 floatText(string msg, vector colour)
@@ -145,11 +169,17 @@ default
 		string cmd = llList2String(tk, 0);
 		debug("dataserver: " + m + "  (cmd: " + cmd +")");
 
-		if (llList2String(tk,1) != PASSWORD ) return;
+		if (llList2String(tk,1) != PASSWORD )
+		{
+			return;
+		}
 
 		if (cmd == "SCRIPT_GIVEN")
 		{
-			if ((existingScript !="") && (llGetInventoryType(existingScript) == INVENTORY_SCRIPT)) llRemoveInventory(existingScript);
+			if ((existingScript !="") && (llGetInventoryType(existingScript) == INVENTORY_SCRIPT))
+			{
+				llRemoveInventory(existingScript);
+			}
 
 			existingScript = "";
 			llResetScript();
@@ -192,12 +222,19 @@ default
 		if (cmd == "REZ_PRODUCT")
 		{
 			//REZ_PRODUCT|PASSWORD|TOUCHER|PRODUCT|EXTRAPARAMS
-			if (llList2String(tk, 1) != PASSWORD) return;
+			if (llList2String(tk, 1) != PASSWORD)
+			{
+				return;
+			}
 
 			provLocked = val;
 			pubKey = id;
 
-			if (provLocked != 1) provLocked =0;
+			if (provLocked != 1)
+			{
+				provLocked =0;
+			}
+
 			toucher = llList2Key(tk, 2);
 			product = llList2String(tk, 3);
 
@@ -218,7 +255,8 @@ default
 			vector rezPos = rezzPosition;
 			rezPos.z += wiggle;
 
-			llRezObject(product, llGetPos() + rezPos * llGetRot() , ZERO_VECTOR, ZERO_ROTATION, 1);
+//			llRezObject(product, llGetPos() + rezPos * llGetRot() , ZERO_VECTOR, ZERO_ROTATION, 1);
+			llRezObject(product, llGetPos() + rezPos * llGetRot() , ZERO_VECTOR, rezzRotation, 1);
 		}
 		else if (cmd == "IGNORE_NEXT_REZ")
 		{
@@ -253,7 +291,10 @@ default
 		{
 			if (llKey2Name(id) == ("SF " + provBoxName))
 			{
-				if (prodScriptName == "") findProdScript();
+				if (prodScriptName == "")
+				{
+					findProdScript();
+				}
 
 				llSleep(0.1);
 				llRemoteLoadScriptPin(id, prodScriptName, 999, TRUE, 1);
@@ -269,7 +310,11 @@ default
 			}
 			else
 			{
-				if (prodScriptName == "") findProdScript();
+				if (prodScriptName == "")
+				{
+					findProdScript();
+				}
+
 				llSleep(0.1);
 
 				if (llGetInventoryType(prodScriptName) == INVENTORY_SCRIPT)
@@ -278,12 +323,19 @@ default
 
 					if (toucher != NULL_KEY)
 					{
-						if (llGetListLength(llGetObjectDetails(id, [OBJECT_NAME])) !=0)  messageObj(id, "INIT|" +PASSWORD +"|" +(string)toucher);
+						if (llGetListLength(llGetObjectDetails(id, [OBJECT_NAME])) !=0)
+						{
+							messageObj(id, "INIT|" +PASSWORD +"|" +(string)toucher);
+						}
 					}
 					else
 					{
-						if (llGetListLength(llGetObjectDetails(id, [OBJECT_NAME])) !=0) messageObj(id, "INIT|" +PASSWORD);
+						if (llGetListLength(llGetObjectDetails(id, [OBJECT_NAME])) !=0)
+						{
+							messageObj(id, "INIT|" +PASSWORD);
+						}
 					}
+
 					llMessageLinked(LINK_SET, 99, "REZZEDPRODUCT|" + PASSWORD +"|" +(string)id +"|" + product, NULL_KEY);
 				}
 				else
@@ -302,10 +354,14 @@ default
 				for (i=0; i<count; i+=1)
 				{
 					ncName = llGetInventoryName(INVENTORY_NOTECARD, i);
+
 					if (llGetSubString(ncName, 5, 11) == "-langP2")
 					{
 						// Re-check object still there and then give notecard
-						if (llGetObjectDetails(id, [OBJECT_NAME]) != []) llGiveInventory(id, ncName);
+						if (llGetObjectDetails(id, [OBJECT_NAME]) != [])
+						{
+							llGiveInventory(id, ncName);
+						}
 					}
 				}
 
@@ -327,7 +383,10 @@ default
 	timer()
 	{
 		existingScript = "product";
-		if (prodScriptVer != 0) existingScript += (string)prodScriptVer;
+		if (prodScriptVer != 0)
+		{
+			existingScript += (string)prodScriptVer;
+		}
 
 		llRegionSay(FARM_CHANNEL, "SCRIPT_REQ|" +PASSWORD +"|" +(string)myKey +"|" +"PRODUCT" +"|" +(string)prodScriptVer);
 		llSetTimerEvent(3600);

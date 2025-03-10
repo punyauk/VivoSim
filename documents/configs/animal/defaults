@@ -1,0 +1,52 @@
+// Set default config values - these can be overwritten by settings in 'an_config' notecard
+
+string   AN_NAME             = "Animal";            //
+string   SURFACE             = "flat";              // Read from config but assume flat if not ground, water or air
+integer  FLOAT_PRIM          = 1;                   // For water animals, prim to set to water level
+integer  CHATTY              = 1;                   // Animal can be 'Chatty, 'No chat', 'Silent' which is represented by  1, 0, -1
+integer  SLEEP_MODE          = 0;                   // Set to 1 to have animal sleep at night (i.e. stay in down position and no sounds or chat)
+integer  IMMOBILE            = 0;                   // Assume animal will move about
+integer  RADIUS              = 10;                  // Assume 10m walk radius
+string   AN_FEEDER           = "SF Animal Feeder";  //
+string   AN_BAAH             = "Ah";                //
+integer  AN_HASGENES         = 0;                   // 1 if animal passes genes through mating
+integer  AN_HASMILK          = 0;                   // 1 if gives milk
+integer  MILKTIME            = 86400;               //
+string   MILK_OBJECT         = "SF Milk";           //
+integer  AN_HASWOOL          = 0;                   // 1 if gives 'wool' product
+integer  WOOLTIME            = 345600;              //
+string   WOOL_OBJECT         = "SF Wool";           // Could also be feathers, crystals etc!
+integer  AN_HASMANURE        = 0;                   // 1 if gives manure
+integer  AN_AUTO_POO         = 0;                   // if 1, animal will rez poo when ready, if 0 then farmer needs to collect it.
+integer  MANURETIME          = 172800;              //
+string   MANURE_OBJECT       = "SF Manure";         //
+integer  LAYS_EGG            = 0;                   // Reproduces with egg
+integer  EGG_TIME            = 86400;               // Time until hatching
+string   MEAT_OBJECT         = "SF Meat";           //
+string   SKIN_OBJECT         = "SF Skin";           //
+integer  MATE_INTERVAL       = 86400;               // how often to be mateable
+float    CHILD_SCALE         = 0.5;                 // Initial scale as child
+float    CHILD_MAX_SCALE     = 1.0;                 // Dont let the child grow beyond this scale
+float    MALE_SCALE          = 1.05;                //
+float    FEMALE_SCALE        = 1.00;                //
+float    STEP_SIZE           = 0.4;                 //
+float    CHILDHOOD_RATIO     = 0.15;                // How much of life to spend as child
+list     ADULT_MALE_PRIMS    = [];                  //
+list     ADULT_FEMALE_PRIMS  = [];                  // link numbers - Both sexes
+list     ADULT_RANDOM_PRIMS  = [];                  // show randomly
+list     CHILD_PRIMS         = [];                  // children only
+integer  MULTI_SKIN          = 0;                   // Set to 1 if animal skin genetics uses different textures per prim
+integer  LIFETIME            = 2592000;             //
+float    WATERTIME           = 5000.0;              //
+float    FEEDTIME            = 5900.0;              //
+integer  PREGNANT_TIME       = 432000;              //
+float    FEEDAMOUNT          = 1.0;                 //
+float    WATERAMOUNT         = 1.0;                 //
+integer  TOTAL_ADULTSOUNDS   = 4;                   //
+integer  TOTAL_BABYSOUNDS    = 2;                   //
+integer  restrictAccess      = FALSE;               // RESTRICT_ACCESS=0   Set to 1 to only allow owner to select 'Butcher', 'Mate' and 'Follow' options
+integer  TOUCH_ACTIVE        = TRUE;                // TOUCH_ACTIVE=1      Set to 0 if touch is handled by another script e.g. baby
+integer  isHuman             = FALSE;               // HUMAN=0
+integer  saveStatus          = FALSE;               // SERVER_SAVE=0
+string   SF_Prefix           = "SF";                // PREFIX=SF
+string   languageCode        = "en-GB";             // LANG=en-GB
